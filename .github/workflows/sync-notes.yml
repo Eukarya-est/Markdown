@@ -1,0 +1,80 @@
+name: Sync Notes to Redis
+
+# Triggers when markdown files are pushed
+on:
+  push:
+    branches:
+      - main
+      - master
+    paths:
+      - '**/*.md'
+      - '*/**.md'
+  workflow_dispatch:  # Allow manual trigger from GitHub UI
+
+jobs:
+  sync-notes:
+    runs-on: ubuntu-latest
+    name: Execute MASS Script
+    
+    steps:
+      - name: 📥 Checkout Markdown Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for proper timestamps
+      
+      - name: 🚀 Execute MASS on Remote Server
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            echo "========================================="
+            echo "Starting MASS Synchronization"
+            echo "========================================="
+            
+            # Set base directory (CHANGE THIS TO YOUR PATH)
+            BASE_DIR="/home/admin"
+            
+            # Navigate to base directory
+            cd "$BASE_DIR" || exit 1
+            
+            # Pull latest changes from Markdown repo
+            echo "Updating Markdown repository..."
+            cd Markdown
+            git pull origin main || git pull origin master
+            echo "✓ Markdown repository updated"
+            
+            # Return to Quasar-2 directory
+            cd "$BASE_DIR/Quasar-2" || exit 1
+            
+            # Activate virtual environment if using one
+            # Uncomment if you're using venv:
+            source .env/bin/activate
+            
+            # Run MASS script
+            echo "Running MASS script..."
+            python3 mass.py
+            
+            # Check exit status
+            if [ $? -eq 0 ]; then
+              echo "========================================="
+              echo "✓ MASS executed successfully"
+              echo "========================================="
+              exit 0
+            else
+              echo "========================================="
+              echo "✗ MASS execution failed"
+              echo "========================================="
+              exit 1
+            fi
+      
+      - name: ✅ Success Notification
+        if: success()
+        run: |
+          echo "::notice title=Sync Complete::Notes successfully synchronized to Redis"
+      
+      - name: ❌ Failure Notification
+        if: failure()
+        run: |
+          echo "::error title=Sync Failed::MASS synchronization failed. Check server logs for details."
