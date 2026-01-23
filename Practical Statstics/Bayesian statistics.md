@@ -46,9 +46,9 @@ $$
 
 | Name                  | Symbol     | Concept                                                 |
 | --------------------- | ---------- | ------------------------------------------------------- |
-| Pre-test probability  | $$P(H|D)$$ | Probability of precondition H when data D is obtained   |
+| Pre-test probability  | $$P(H \mid D)$$ | Probability of precondition H when data D is obtained   |
 | Post-test probability | $$P(H)$$   | Probability of precondition H before data D is obtained |
-| Likelihood            | $$P(D|H)$$ | Probability of obtaining data D based on precondition H |
+| Likelihood            | $$P(D \mid H)$$ | Probability of obtaining data D based on precondition H |
 
 e.g. 
 
